@@ -1,0 +1,156 @@
+#!/bin/zsh
+VERSION=1.0.0
+GIT_CMD=""
+GIT_REPO=""
+GIT_OUT=""
+GIT_FULL_COMMAND=("")
+NOCONFIRM=false
+
+showHelp()
+{
+cat <<- EOF
+    Usage: fastgit [-hvy] <command> <username>( |/)<repository> [<destination>]
+
+        -y, --noconfirm  do not ask for any confirmation
+        -h, --help       print help document
+        -v, --version    print script version
+
+    Examples:
+        fastgit -y clone Electron7-7 HelpfulShellScripts
+        fastgit clone Electron7-7/HelpfulShellScripts ./some_shell_scripts
+
+    fastgit v$VERSION
+EOF
+}
+
+realpathCheck()
+{
+    realpath --version >/dev/null 2>&1 && return 0
+
+cat <<- EOF
+    [WARNING]: /usr/bin/realpath not found
+
+    An alternative method of normalizing filesystem paths will be used, instead.
+    This alternative method should work fine but doesn't resolve soft links, so keep
+    that in mind if you see this warning message appear.
+
+    :3
+EOF
+    return -1
+}
+
+FillVariables()
+{
+    GIT_CMD="$1"
+    shift
+
+    if [[ "$1" =~ '/' ]]; then
+        GIT_REPO="$1"
+        shift
+    else
+        GIT_REPO="$1/$2"
+        shift 2
+    fi
+
+    if [[ -n "$1" ]]; then
+        realpathCheck && GIT_OUT="$(realpath -s $1)" || GIT_OUT=$(cd "$1"; pwd)
+    else
+        GIT_OUT="$(pwd)/${GIT_REPO##*/}"
+    fi
+
+    [[ -e "$GIT_OUT" ]] && { printf "[WARNING]: Output directory already exists! Appending repository name to output.\n"; GIT_OUT+="/${GIT_REPO##*/}" }
+}
+
+RunCommand()
+{
+    sleep .05
+    printf "Executing command: $GIT_FULL_COMMAND\n"
+    sleep .2
+    "${GIT_FULL_COMMAND[@]}"
+    exit 0
+}
+
+ChangeOutput()
+{
+    sleep .05
+    read "OUTPUT_DIR?Enter new output directory: "
+    realpathCheck && GIT_OUT="$(realpath -s $OUTPUT_DIR)" || GIT_OUT=$(cd "$OUTPUT_DIR"; pwd)
+    [[ -e "$GIT_OUT" ]] && { printf "[WARNING]: Output directory already exists! Appending repository name to output.\n"; GIT_OUT+="/${GIT_REPO##*/}" }
+
+    printf ":: New output directory:\n\t$OUTPUT_DIR\n"
+}
+
+ChangeRepo()
+{
+    printf ":: Valid repository syntaxes:\n\tusername/repository\n\tusername repository\n\n"
+    sleep .05
+    read "REPO?Enter new repository: "
+    OLD_REPO_OUT="${GIT_REPO##*/}"
+    [[ $REPO =~ '/' ]] && GIT_REPO="$REPO" || GIT_REPO="${REPO/ //}"
+    printf ":: New repository:\n\t$GIT_REPO\n\n"
+    sleep .05
+    read "CONFIRM?Change output directory name to match the repository name? [Y/n] "
+    sleep .05
+    [[ "$CONFIRM" =~ ^[Yy]$ || -z "$CONFIRM" ]] && { GIT_OUT=${GIT_OUT/$OLD_REPO_OUT/${GIT_REPO##*/}}; printf ":: New output directory:\n\t$GIT_OUT\n" }
+}
+
+ChoiceLoop()
+{
+    sleep .05
+    GIT_FULL_COMMAND=(git "$GIT_CMD" "https://github.com/$GIT_REPO" "$GIT_OUT")
+    printf ":: Command to be run:\n\t\"$GIT_FULL_COMMAND\"\n"
+    printf ":: Options:\n\t1) Run command  2) Change output  3) Change repository  4) Cancel\n\n"
+    read "CHOICE?Make a selection (default=1): "
+    case "$CHOICE" in
+        1|)
+            RunCommand
+            ;;
+        2)
+            ChangeOutput
+            ;;
+        3)
+            ChangeRepo
+            ;;
+        4)
+            printf "Exiting!\n"
+            sleep .1
+            exit -1
+            ;;
+        *)
+            printf "Unknown choice: \"$CHOICE\"\n"
+            sleep .05
+            ;;
+    esac
+    ChoiceLoop
+}
+
+OPTIONS=$(getopt -l "help,version,noconfirm" -o "hvy" -a -- "$@")
+eval set -- "$OPTIONS"
+
+while true
+do
+    case "$1" in
+        -h|--help)
+            showHelp
+            exit 0
+            ;;
+        -v|--version)
+            printf "fastgit $VERSION\n"
+            exit 0
+            ;;
+        -y|--noconfirm)
+            NOCONFIRM=true
+            shift 2
+            FillVariables "$@"
+            ChoiceLoop
+            exit 0
+            ;;
+        --)
+            shift
+            FillVariables "$@"
+            ChoiceLoop
+            exit 0
+            ;;
+    esac
+    shift
+done
