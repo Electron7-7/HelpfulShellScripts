@@ -2,9 +2,9 @@
 A collection of most of my personal shell scripts that I find to be very useful. The acronym is pronounced "hiss"... like a snake.
 
 # QuickLinks
- - [fastgit](#fastgit)
- - [mkcmd](#mkcmd)
- - [rmcmd](#rmcmd)
+ - [fastgit](#fastgit) - I hate typing "https:/<n/>/github.com/"
+ - [mkcmd](#mkcmd) - I hate typing "touch ~/bin/command && chmod +x ~/bin/command && nano ~/bin/command"
+ - [rmcmd](#rmcmd) - I'm just lazy... and a software dev
 
 # Descriptions
 ## fastgit
@@ -19,9 +19,9 @@ A collection of most of my personal shell scripts that I find to be very useful.
         fastgit -y clone Electron7-7 HelpfulShellScripts
         fastgit clone Electron7-7/HelpfulShellScripts ./bin/some_shell_scripts
 ```
-I hate typing "https://github.com/".
+I hate typing "https:/<n/>/github.com/".
 
-Okay, there's more to it than that, but tbh the main reason I made `fastgit` was because I hate having to type out "https://github.com/" every time I clone a repository. Compare the difference between `git` and `fastgit` and you'll see why I made it:
+Okay, there's more to it than that, but tbh the main reason I made `fastgit` was because I hate having to type out "https:/<n/>/github.com/" every time I clone a repository. Compare the difference between `git` and `fastgit` and you'll see why I made it:
 
 ```
 $ git clone https://github.com/Electron7-7/HelpfulShellScripts # Belongs in the trash!
