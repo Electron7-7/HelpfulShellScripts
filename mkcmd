@@ -1,1 +1,122 @@
-/home/thelegend27/Github/mkcmd/mkcmd
+#!/bin/zsh
+# A simple command to automate the creation of shell scripts.
+VERSION=1.1.0
+HOME_BIN="$HOME/bin/"
+LOCAL_BIN="$HOME/.local/bin/"
+TARGET_BIN=""
+EDIT_COMMANDS=true
+CMD_EDITOR=("$EDITOR")
+
+[[ "$EDITOR" =~ "nano" ]] && CMD_EDITOR+="+2"
+
+showHelp()
+{
+cat <<- "EOF"
+    Usage: mkcmd [-hvn] [-b|--bin <directory>] <command>
+
+        -h, --help        print help document
+        -v, --version     print script version
+        -n, --no-edit     do not edit file
+        -b, --bin=OUTDIR  set the output directory to OUTDIR
+
+    Config:
+        mkcmd can be configured with a pre-determined output directory via the
+        variable "default_bin_directory". The config file can be either
+        $HOME/.mkcmd.conf or $XDG_CONFIG_HOME/mkcmd.conf. As an example, to set
+        the default output directory to $HOME/bin, you would write this in the
+        config file: default_bin_directory=$HOME/bin
+
+    Examples:
+        mkcmd new_command
+        mkcmd -n --bin .local/bin new_command_2
+
+    mkcmd v$VERSION
+EOF
+}
+
+readConfig()
+{
+    [[ ! -f "$HOME/.mkcmd.conf" && ! -f "${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf" ]] && return 0
+    [[ -f "$HOME/.mkcmd.conf" ]] && CONFIG="$HOME/.mkcmd.conf"
+    [[ -f "${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf" ]] && CONFIG="${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf"
+    CONF_BIN_DIR=$(grep -P "(?<=default_bin_directory=).+" --only-matching --color=no "$CONFIG")
+    BUFFER=""
+    for (( i=0 ; i < ${#CONF_BIN_DIR} ; i++ )); do
+        if [[ ${CONF_BIN_DIR:$i:1} == "$" ]]; then
+            i+=1
+            VAR_BUFFER=""
+            while [[ ${CONF_BIN_DIR:$i:1} =~ '\w' ]]; do
+                VAR_BUFFER=""$VAR_BUFFER"${CONF_BIN_DIR:$i:1}"
+                i+=1
+            done
+            BUFFER="$BUFFER$(env | grep --only-matching --color=no -P "(?<=\b$VAR_BUFFER\b=).+")"
+        fi
+        BUFFER="$BUFFER${CONF_BIN_DIR:$i:1}"
+    done
+    TARGET_BIN="$BUFFER/"
+}
+
+readConfig
+
+OPTIONS=$(getopt -l "help,version,no-edit,bin:" -o "hvnb:" -a -- "$@")
+eval set -- "$OPTIONS"
+
+while true
+do
+    case "$1" in
+    -h|--help)
+        showHelp
+        exit 0
+        ;;
+    -v|--version)
+        printf "mkcmd $VERSION\n"
+        exit 0
+        ;;
+    -b|--bin)
+        shift
+        TARGET_BIN="$1"
+        ;;
+    -n|--no-edit)
+        EDIT_COMMANDS=false
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+CMDNAMES=($@)
+
+[[ ${#CMDNAMES[@]} == 0 ]] && (printf "[ERROR] Command name(s)/path(s) missing!\n" ; exit -1)
+
+queryHomeBin()
+{
+    TARGET_BIN=${HOME_BIN:-LOCAL_BIN}
+    if [[ -d "$HOME_BIN" && -d "$LOCAL_BIN" ]]; then
+        printf "Multiple user bin/ directories discovered\n:: Directories\n   1) "$HOME_BIN"  2) "$LOCAL_BIN"\n"
+        read -s "?Selection (default = 1): " CHOICE ; echo ""
+        [[ "$CHOICE" == 2 ]] && TARGET_BIN="$LOCAL_BIN"
+        return 0
+    fi
+
+    [[ -d "$TARGET_BIN" ]] || { printf "[ERROR] Couldn't find "$HOME_BIN" or "$LOCAL_BIN". Make sure at least one of them exists!\n"; return -1 }
+}
+
+for COMMAND in ${CMDNAMES[@]}; do
+    [[ -e "$COMMAND" ]] || COMMAND="$TARGET_BIN$COMMAND"
+    if [[ -e "$COMMAND" ]]; then
+        [[ ! -x "$COMMAND" ]] && chmod +x "$COMMAND"
+        [[ "$EDIT_COMMANDS" == "true" ]] && { "${CMD_EDITOR[@]}" "$COMMAND"; continue }
+        continue
+    fi
+
+    if [[ ! "$COMMAND" =~ "/" ]]; then
+        [[ -z "$TARGET_BIN" ]] && queryHomeBin
+        [[ $? -eq -1 ]] && exit -1
+    fi
+
+    printf "#!${SHELL#/usr}" > "$COMMAND" ; chmod +x "$COMMAND"
+    [[ "$EDIT_COMMANDS" == "true" ]] && "${CMD_EDITOR[@]}" "$COMMAND"
+done

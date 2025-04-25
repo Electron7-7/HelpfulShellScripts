@@ -1,1 +1,133 @@
-/home/thelegend27/Github/mkcmd/rmcmd
+#!/bin/zsh
+# A simple command to automate the deletion of shell scripts.
+# Companion to "mkcmd".
+
+VERSION=1.0.1
+HOME_BIN=${HOME}/bin
+LOCAL_BIN=${HOME}/.local/bin
+TARGET_BIN=""
+WARN=true
+
+showHelp()
+{
+cat <<- "EOF"
+    Usage: rmcmd [-hvn] [-b|--bin <directory>] <command>
+
+        -h, --help        print help document
+        -v, --version     print script version
+        -n, --no-warn     do not prompt before delete
+        -b, --bin=OUTDIR  set the search directory to OUTDIR
+
+    Config:
+        rmcmd can be configured with a pre-determined search directory via the
+        variable "default_bin_directory". The config file is the same as mkcmd,
+        either $HOME/.mkcmd.conf or $XDG_CONFIG_HOME/mkcmd.conf. As an example,
+        to set the default output directory to $HOME/bin, you would write this
+        in the config file: default_bin_directory=$HOME/bin
+
+    Examples:
+        rmcmd new_command
+        rmcmd -n --bin .local/bin new_command_2
+
+    rmcmd v$VERSION
+EOF
+}
+
+readConfig()
+{
+    [[ ! -f ${HOME}/.mkcmd.conf && ! -f ${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf ]] && return 0
+    [[ -f ${HOME}/.mkcmd.conf ]] && CONFIG=${HOME}/.mkcmd.conf
+    [[ -f ${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf ]] && CONFIG=${XDG_CONFIG_HOME:-HOME"/.config"}/mkcmd.conf
+    CONF_BIN_DIR=$(grep -P "(?<=default_bin_directory=).+" --only-matching --color=no ${CONFIG})
+    BUFFER=""
+    for (( i=0 ; i < ${#CONF_BIN_DIR} ; i++ )); do
+        if [[ ${CONF_BIN_DIR:$i:1} == "$" ]]; then
+            i+=1
+            VAR_BUFFER=""
+            while [[ ${CONF_BIN_DIR:$i:1} =~ '\w' ]]; do
+                VAR_BUFFER="${VAR_BUFFER}${CONF_BIN_DIR:$i:1}"
+                i+=1
+            done
+            BUFFER="${BUFFER}$(env | grep --only-matching --color=no -P "(?<=\b${VAR_BUFFER}\b=).+")"
+        fi
+        BUFFER="${BUFFER}${CONF_BIN_DIR:$i:1}"
+    done
+    TARGET_BIN="${BUFFER}/"
+}
+
+readConfig
+
+OPTIONS=$(getopt -l "help,version,no-warn,bin:" -o "hvnb:" -a -- "$@")
+eval set -- ${OPTIONS}
+
+while true
+do
+    case ${1} in
+    -h|--help)
+        showHelp
+        exit 0
+        ;;
+    -v|--version)
+        printf "rmcmd $VERSION"
+        exit 0
+        ;;
+    -b|--bin)
+        shift
+        TARGET_BIN=${1}
+        ;;
+    -n|--no-warn)
+        WARN=false
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+CMDNAMES=($@)
+
+if [[ ${#CMDNAMES[@]} == 0 ]]; then
+    printf "[ERROR] Command name(s)/path(s) missing!\n"
+    exit -1
+fi
+
+queryHomeBin()
+{
+    TARGET_BIN=${HOME_BIN:-LOCAL_BIN}
+    if [[ -d ${HOME_BIN} && -d ${LOCAL_BIN} ]]; then
+        printf "Multiple user bin/ directories discovered\n:: Directories\n   1) ${HOME_BIN}  2) ${LOCAL_BIN}\n"
+        read -s "?Selection (default = 1): " CHOICE ; echo ""
+        [[ ${CHOICE} == 2 ]] && TARGET_BIN=${LOCAL_BIN}
+        return 0
+    fi
+
+    if [[ ! -d ${TARGET_BIN} ]]; then
+        printf "[ERROR] Couldn't find ${HOME_BIN} or ${LOCAL_BIN}. Make sure at least one of them exists!\n"
+        return -1
+    fi
+}
+
+warnDelete()
+{
+    [[ ${WARN} == false ]] && return 0
+    read -qs "?Delete file \"${COMMAND}\"? [Y/n] " CHOICE ; echo ""
+    return ${CHOICE}
+}
+
+for COMMAND in ${CMDNAMES[@]}; do
+    if [[ ! ${COMMAND} =~ "/" ]]; then
+        [[ -z ${TARGET_BIN} || ! -d ${TARGET_BIN} ]] && queryHomeBin
+        [[ $? -eq -1 ]] && exit -1
+        COMMAND="${TARGET_BIN}/${COMMAND}"
+    fi
+
+    if [[ ! -e ${COMMAND} ]]; then
+        printf "File not found at \"${COMMAND}\". Skipping!\n"
+        continue
+    fi
+
+    warnDelete
+    rm ${COMMAND}
+done
