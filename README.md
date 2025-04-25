@@ -2,11 +2,9 @@
 A collection of most of my personal shell scripts that I find to be very useful. The acronym is pronounced "hiss"... like a snake.
 
 # QuickLinks
-[fastgit](#fastgit)
-
-[mkcmd](#mkcmd)
-
-[rmcmd](#rmcmd)
+ - [fastgit](#fastgit)
+ - [mkcmd](#mkcmd)
+ - [rmcmd](#rmcmd)
 
 # Descriptions
 ## fastgit
