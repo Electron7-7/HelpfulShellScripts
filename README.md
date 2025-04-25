@@ -3,7 +3,9 @@ A collection of most of my personal shell scripts that I find to be very useful.
 
 # QuickLinks
 [fastgit](#fastgit)
+
 [mkcmd](#mkcmd)
+
 [rmcmd](#rmcmd)
 
 # Descriptions
