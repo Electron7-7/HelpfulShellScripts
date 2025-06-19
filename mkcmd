@@ -1,10 +1,12 @@
 #!/bin/zsh
 # A simple command to automate the creation of shell scripts.
-VERSION=1.1.0
+VERSION="1.1.0"
+VERSION_ECHO="    mkcmd v$VERSION"
 HOME_BIN="$HOME/bin/"
 LOCAL_BIN="$HOME/.local/bin/"
 TARGET_BIN=""
 EDIT_COMMANDS=true
+RUN_AFTER_EDITING=false
 CMD_EDITOR=("$EDITOR")
 
 [[ "$EDITOR" =~ "nano" ]] && CMD_EDITOR+="+2"
@@ -12,12 +14,14 @@ CMD_EDITOR=("$EDITOR")
 showHelp()
 {
 cat <<- "EOF"
-    Usage: mkcmd [-hvn] [-b|--bin <directory>] <command>
+    Usage: mkcmd [-hvnr] [-b|--bin <directory>] [-e|--editor <editor>] <command>
 
         -h, --help        print help document
         -v, --version     print script version
         -n, --no-edit     do not edit file
+        -r, --run         run the command after exiting the editor
         -b, --bin=OUTDIR  set the output directory to OUTDIR
+        -e, --editor=EDIT set the command editor to EDIT or the global editor ($EDITOR) if EDIT is invalid
 
     Config:
         mkcmd can be configured with a pre-determined output directory via the
@@ -29,9 +33,8 @@ cat <<- "EOF"
     Examples:
         mkcmd new_command
         mkcmd -n --bin .local/bin new_command_2
-
-    mkcmd v$VERSION
 EOF
+    printf "\n$VERSION_ECHO\n"
 }
 
 readConfig()
@@ -56,9 +59,14 @@ readConfig()
     TARGET_BIN="$BUFFER/"
 }
 
+setEditorSafe()
+{
+    [[ "$(which $1 &>/dev/null; printf $?)" == "0" ]] && CMD_EDITOR="$1" || printf "::ERROR - Editor \"$1\" not found! Keeping default editor ($EDITOR)\n"
+}
+
 readConfig
 
-OPTIONS=$(getopt -l "help,version,no-edit,bin:" -o "hvnb:" -a -- "$@")
+OPTIONS=$(getopt -l "help,version,no-edit,run,bin:,editor:" -o "hvnrb:e:" -a -- "$@")
 eval set -- "$OPTIONS"
 
 while true
@@ -69,15 +77,22 @@ do
         exit 0
         ;;
     -v|--version)
-        printf "mkcmd $VERSION\n"
+        printf "$VERSION_ECHO\n"
         exit 0
+        ;;
+    -n|--no-edit)
+        EDIT_COMMANDS=false
+        ;;
+    -r|--run)
+        RUN_AFTER_EDITING=true
         ;;
     -b|--bin)
         shift
         TARGET_BIN="$1"
         ;;
-    -n|--no-edit)
-        EDIT_COMMANDS=false
+    -e|--editor)
+        shift
+        setEditorSafe "$1"
         ;;
     --)
         shift
@@ -89,8 +104,9 @@ done
 
 CMDNAMES=($@)
 
-[[ ${#CMDNAMES[@]} == 0 ]] && (printf "[ERROR] Command name(s)/path(s) missing!\n" ; exit -1)
+[[ ${#CMDNAMES[@]} == 0 ]] && (printf "::ERROR - Command name(s)/path(s) missing!\n" ; exit -1)
 
+# FIXME: make the directory querying, setting, and other shit BETTER!
 queryHomeBin()
 {
     TARGET_BIN=${HOME_BIN:-LOCAL_BIN}
@@ -101,14 +117,14 @@ queryHomeBin()
         return 0
     fi
 
-    [[ -d "$TARGET_BIN" ]] || { printf "[ERROR] Couldn't find "$HOME_BIN" or "$LOCAL_BIN". Make sure at least one of them exists!\n"; return -1 }
+    [[ -d "$TARGET_BIN" ]] || { printf "::ERROR - Couldn't find "$HOME_BIN" or "$LOCAL_BIN". Make sure at least one of them exists!\n"; return -1 }
 }
 
 for COMMAND in ${CMDNAMES[@]}; do
     [[ -e "$COMMAND" ]] || COMMAND="$TARGET_BIN$COMMAND"
     if [[ -e "$COMMAND" ]]; then
         [[ ! -x "$COMMAND" ]] && chmod +x "$COMMAND"
-        [[ "$EDIT_COMMANDS" == "true" ]] && { "${CMD_EDITOR[@]}" "$COMMAND"; continue }
+        [[ "$EDIT_COMMANDS" == "true" ]] && { "${CMD_EDITOR[@]}" "$COMMAND"; [[ "$RUN_AFTER_EDITING" == "true" ]] && "$COMMAND"}
         continue
     fi
 
@@ -118,5 +134,5 @@ for COMMAND in ${CMDNAMES[@]}; do
     fi
 
     printf "#!${SHELL#/usr}" > "$COMMAND" ; chmod +x "$COMMAND"
-    [[ "$EDIT_COMMANDS" == "true" ]] && "${CMD_EDITOR[@]}" "$COMMAND"
+    [[ "$EDIT_COMMANDS" == "true" ]] && { "${CMD_EDITOR[@]}" "$COMMAND"; [[ "$RUN_AFTER_EDITING" == "true" ]] && "$COMMAND" }
 done
