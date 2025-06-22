@@ -1,0 +1,86 @@
+#!/bin/zsh
+VERSION="0.0.1"
+VERSION_ECHO="countfiles v$VERSION"
+
+RECURSIVE=0
+COUNT_DIRS=0
+COUNT_FILES=1
+SPECIFY_COUNT_FILES=0
+
+GREEN="\e[0;32m"
+YELLOW="\e[0;33m"
+BLUE="\e[0;34m"
+RESET="\e[0m"
+
+_Help()
+{
+cat <<- "EOF"
+    Usage: countfiles [-hvrdf] [DIRECTORY]
+
+        -h, --help        print help document
+        -v, --version     print script version
+        -r, --recursive   include all sub-directories in search
+        -d, --directory   count directories (files will not be counted unless "-f" is explicitly specified)
+        -f, --files       count files (default behaviour; this flag is only useful in combination with "-d")
+
+    Examples:
+        countfiles -r
+        countfiles -d ~/Documents
+
+    Notes:
+        If no directory is specified, the current working directory is used instead.
+EOF
+
+    printf "\n$VERSION_ECHO\n"
+}
+
+OPTIONS=$(getopt -l "help,version,recursive,directories,files" -o "hvrdf" -a -- "$@")
+eval set -- "$OPTIONS"
+
+while true
+do
+    case "$1" in
+    -h|--help)
+        _Help
+        exit 0
+        ;;
+    -v|--version)
+        printf "$VERSION_ECHO\n"
+        exit 0
+        ;;
+    -r|--recursive)
+        RECURSIVE=1
+        ;;
+    -d|--directories)
+        COUNT_DIRS=1
+        ;;
+    -f|--files)
+        SPECIFY_COUNT_FILES=1
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+DIR="${$(cd $1 && pwd):-$(pwd)}"
+FILE_COUNT=0
+DIRECTORY_COUNT=0
+[[ $COUNT_DIRS -eq 1 && $SPECIFY_COUNT_FILES -ne 1 ]] && COUNT_FILES=0
+
+[[ $RECURSIVE -eq 1 ]] && _RECURSIVE_PRINTOUT=" $YELLOW(Recursive search active!)$RESET\n" || _RECURSIVE_PRINTOUT="\n"
+
+if [[ $COUNT_FILES -eq 1 ]]; then
+    EXTRA_NEWLINE="\n"
+    printf "::Counting the number of files in $BLUE$DIR$RESET$_RECURSIVE_PRINTOUT"
+    [[ $RECURSIVE -eq 1 ]] && FILE_COUNT=$(find "$DIR" -type f | wc -l) || FILE_COUNT=$(find "$DIR" -maxdepth 1 -type f | wc -l)
+    printf "Files count: $GREEN$FILE_COUNT$RESET\n"
+fi
+
+if [[ $COUNT_DIRS -eq 1 ]]; then
+    printf "$EXTRA_NEWLINE::Counting the number of directories in $BLUE$DIR$RESET$_RECURSIVE_PRINTOUT"
+    [[ $RECURSIVE -eq 1 ]] && DIRECTORY_COUNT=$(find "$DIR" -type d | wc -l) || DIRECTORY_COUNT=$(find "$DIR" -maxdepth 1 -type d | wc -l)
+    printf "Directories count: $GREEN$DIRECTORY_COUNT$RESET\n"
+fi

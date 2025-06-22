@@ -5,6 +5,7 @@ A collection of most of my personal shell scripts that I find to be very useful.
  - [fastgit](#fastgit) - I hate typing "https:/<n/>/github.com/"
  - [mkcmd](#mkcmd) - I hate typing "touch ~/bin/command && chmod +x ~/bin/command && nano ~/bin/command"
  - [rmcmd](#rmcmd) - I'm just lazy... and a software dev
+ - [countfiles](#countfiles) - A quick way to count files and/or directories either recursively or non-recursively
 
 # Descriptions
 ## fastgit
@@ -78,3 +79,22 @@ default_bin_directory=$HOME/bin
         rmcmd -n --bin .local/bin new_command_2
 ```
 The companion to [`mkcmd`](#mkcmd), `rmcmd` simply removes the specified command. It does the same directory check and query that [`mkcmd`](#mkcmd) does, and you can override it with the same flag or config file. There's a confirmation before deleting the file, for safety, that you can skip with the `--no-warn` flag (although, I wouldn't reccomend it)
+
+## countfiles
+```
+    Usage: countfiles [-hvrdf] [DIRECTORY]
+
+        -h, --help        print help document
+        -v, --version     print script version
+        -r, --recursive   include all sub-directories in search
+        -d, --directory   count directories (files will not be counted unless "-f" is explicitly specified)
+        -f, --files       count files (default behaviour; this flag is only useful in combination with "-d")
+
+    Examples:
+        countfiles -r
+        countfiles -d ~/Documents
+
+    Notes:
+        If no directory is specified, the current working directory is used instead.
+```
+A quick and easy way to count files and/or directories. You can specify whether you want to count directories, files, or both (files being the default) as well as whether or not to search recursively (searching is non-recursive by default). If no directory is specified, then the current working directory is searched.
