@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+# TODO: Add a single argument/flag for toggling the printouts off (and make printouts a simple function that checks that flag and, if it's true, early returns)
+
+ERR_MSG_ARGUMENT_MISSING="[toggle_program][ERROR] Missing program name!\n"
+MSG_KILLING_PROGRAM="[toggle_program] Program '$1' will be closed.\n"
+MSG_RUNNING_PROGRAM="[toggle_program] Program '$1' will be run.\n"
+PROGRAM_ID=$(pgrep $1 2>/dev/null)
+
+[[ -z "$1" ]] && { printf "$ERR_MSG_ARGUMENT_MISSING" && exit 1 }
+
+if [[ -n "$PROGRAM_ID" ]]; then
+	printf "$MSG_KILLING_PROGRAM"
+	kill $PROGRAM_ID
+	exit 0
+fi
+
+printf "$MSG_RUNNING_PROGRAM"
+$@
