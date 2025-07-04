@@ -1,0 +1,72 @@
+#!/usr/bin/zsh
+
+# NOTE TO SELF: I would like the arrow printouts to be lined up; maybe write a function to calculate the necessary white space needed to do that?
+# NOTE TO SELF: While I'm at it, why not add a flag for dry runs; it would only be useful for testing the script but hey, why not?
+
+THIS_NAME="${0##*/}"
+WARN_MSG_PERMISSIONS="[$THIS_NAME][WARNING] You need special permissions to write to this directory! Trying sudo...\n"
+ERR_MSG_SPECIFY_LOCATION="Please specify the install location.\n"
+ERR_MSG_INVALID_LOCATION="Install location does not exist!\n"
+ERR_MSG_INSTALL_SCRIPT_MOVED="The install script has been moved! Please put it back in the Github repository directory.\n"
+INSTALL_FILE_REALPATH="$(realpath $0)"
+SCRIPTS_LOCATION="${INSTALL_FILE_REALPATH%/*}"
+INSTALL_LOCATION="$1"
+TEST_FILE="$INSTALL_LOCATION/.test"
+LONGEST_NAME=""
+
+throw_error()
+{
+    printf "[$THIS_NAME][ERROR] $1" >&2
+    exit 1
+}
+
+equal_lengths()
+{
+    for file in $SCRIPTS_LOCATION/*; do
+        if [[ ! "$file" =~ "install-helpful-shell-scripts" && ! "$file" =~ "README.md" ]]; then
+            if [[ ${#file} -gt ${#LONGEST_NAME} ]]; then
+                LONGEST_NAME="$file"
+            fi
+        fi
+    done
+}
+
+install()
+{
+    if [[ ! "$INSTALL_FILE_REALPATH" =~ "HelpfulShellScripts" ]]; then
+        throw_error "$ERR_MSG_INSTALL_SCRIPT_MOVED"
+    fi
+    equal_lengths
+    for file in "$SCRIPTS_LOCATION"/*; do
+        if [[ ! "$file" =~ "install-helpful-shell-scripts" && ! "$file" =~ "README.md" ]]; then
+            LINKED_FILE="${INSTALL_LOCATION%/}/${file##*/}"
+            NUMBER_OF_SPACES=$((${#LONGEST_NAME} - ${#file}))
+            SPACES=""
+            for ((i = 0 ; i < $NUMBER_OF_SPACES ; i++)); do
+                SPACES="$SPACES "
+            done
+            printf "$file$SPACES -> $LINKED_FILE\n"
+            if [[ ! -e "$LINKED_FILE" ]]; then
+                ln -s "$file" "$LINKED_FILE"
+            fi
+        fi
+    done
+}
+
+if [[ -z "$INSTALL_LOCATION" ]]; then
+    throw_error "$ERR_MSG_SPECIFY_LOCATION"
+fi
+
+if [[ ! -e "$INSTALL_LOCATION" ]]; then
+    throw_error "$ERR_MSG_INVALID_LOCATION"
+fi
+
+if [[ $(touch "$TEST_FILE" &>/dev/null ; echo "$?") -eq 1 ]]; then
+    printf "$WARN_MSG_PERMISSIONS"
+    sudo install
+    exit 0
+else
+    rm "$TEST_FILE"
+fi
+
+install
