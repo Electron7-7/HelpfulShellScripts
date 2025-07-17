@@ -46,9 +46,10 @@ install()
                 SPACES="$SPACES "
             done
             printf "$file$SPACES -> $LINKED_FILE\n"
-            if [[ ! -e "$LINKED_FILE" ]]; then
-                ln -s "$file" "$LINKED_FILE"
+            if [[ -e "$LINKED_FILE" ]]; then
+                rm "$LINKED_FILE"
             fi
+            ln -s "$file" "$LINKED_FILE"
         fi
     done
 }
