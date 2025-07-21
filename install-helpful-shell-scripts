@@ -14,6 +14,11 @@ INSTALL_LOCATION="$1"
 TEST_FILE="$INSTALL_LOCATION/.test"
 LONGEST_NAME=""
 
+FILE_COLOR="\x1b[1;37m"
+ARROWS_COLOR="\x1b[1;39m"
+LINK_COLOR="\x1b[1;32m"
+RESET="\x1b[0m"
+
 throw_error()
 {
     printf "[$THIS_NAME][ERROR] $1" >&2
@@ -45,10 +50,8 @@ install()
             for ((i = 0 ; i < $NUMBER_OF_SPACES ; i++)); do
                 SPACES="$SPACES "
             done
-            printf "$file$SPACES -> $LINKED_FILE\n"
-            if [[ -e "$LINKED_FILE" ]]; then
-                rm "$LINKED_FILE"
-            fi
+            printf "Creating static link: $FILE_COLOR$file$SPACES$ARROWS_COLOR -> $LINK_COLOR$LINKED_FILE$RESET\n"
+            rm -f "$LINKED_FILE" &>/dev/null
             ln -s "$file" "$LINKED_FILE"
         fi
     done
