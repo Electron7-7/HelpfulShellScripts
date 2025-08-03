@@ -3,6 +3,7 @@
 # TODO: Add a single argument/flag for toggling the printouts off (and make printouts a simple function that checks that flag and, if it's true, early returns)
 
 NAME="toggle"
+VERSION="0.0.1"
 
 ERR_MSG_ARGUMENT_MISSING="[$NAME][ERROR] Missing program name!\n"
 MSG_KILLING_PROGRAM="[$NAME] Program '$1' will be closed.\n"
