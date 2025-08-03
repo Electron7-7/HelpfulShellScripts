@@ -1,0 +1,66 @@
+#!/bin/zsh
+
+NAME="please"
+VERSION="2.0.0"
+PROGRAM="${1:-MISSING}"
+ARGS="${2:-MISSING}"
+LOCATION="${$(realpath $2)%/*}"
+
+ERR_MSG_MISSING_ARGUMENT="[$NAME][ERROR] Missing 1 or more arguments!\n\tArgument 1: $PROGRAM\n\tArgument 2: $ARGS"
+MSG_NO_PERMISSION="[$NAME] You don't have permission to write to $LOCATION! Trying sudo...\n"
+
+showHelp()
+{
+cat <<- EOF
+    Usage: $NAME [-hv] <program> <arguments>
+
+        -h, --help       print help document
+        -v, --version    print script version
+
+    Description:
+        Used to run a program that interacts with a file/directory (i.e: 'nano', 'rm', 'mkdir', 'git', etc).
+        If you don't have sufficient permissions for the file/directory you're trying to access, '$NAME' will
+        automatically re-run the program with 'sudo'.
+
+    Examples:
+        $NAME nano /etc/ssh/sshd_config
+        $NAME rm /usr/local/bin/something
+
+    $NAME v$VERSION
+EOF
+}
+
+OPTIONS=$(getopt -l "help,version" -o "hv" -a -- "$@")
+eval set -- "$OPTIONS"
+
+while true
+do
+    case "$1" in
+        -h|--help)
+            showHelp
+            exit 0
+            ;;
+        -v|--version)
+            printf "$NAME $VERSION\n"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+    esac
+    shift
+done
+
+
+[[ -z "$2" ]] && { printf "$ERR_MSG_MISSING_ARGUMENT" && exit 1 }
+
+[[ -f "$ARGS" ]] && SELECTION="$ARGS" || SELECTION="$LOCATION"
+
+if [[ $(test -w "$SELECTION" ; echo $?) -eq 0 && $(test -r "$SELECTION" ; echo $?) -eq 0 ]]; then
+    "$PROGRAM" "$ARGS"
+else
+    printf "$MSG_NO_PERMISSION"
+    sleep 1
+    sudo "$PROGRAM" "$ARGS"
+fi
