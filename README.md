@@ -6,6 +6,7 @@ A collection of most of my personal shell scripts that I find to be very useful.
  - [mkcmd](#mkcmd) - I hate typing "touch ~/bin/command && chmod +x ~/bin/command && nano ~/bin/command"
  - [rmcmd](#rmcmd) - I'm just lazy... and a software dev
  - [countfiles](#countfiles) - A quick way to count files and/or directories either recursively or non-recursively
+ - [please](#please)
 
 # Descriptions
 ## githubclone
@@ -99,3 +100,23 @@ The companion to [`mkcmd`](#mkcmd), `rmcmd` simply removes the specified command
         If no directory is specified, the current working directory is used instead.
 ```
 A quick and easy way to count files and/or directories. You can specify whether you want to count directories, files, or both (files being the default) as well as whether or not to search recursively (searching is non-recursive by default). If no directory is specified, then the current working directory is searched.
+
+## please
+```
+    Usage: please [-hv] <program> <arguments>
+
+        -h, --help       print help document
+        -v, --version    print script version
+
+    Description:
+        Used to run a program that interacts with a file/directory (i.e: 'nano', 'rm', 'mkdir', 'git', etc).
+        If you don't have sufficient permissions for the file/directory you're trying to access, 'please' will
+        automatically re-run the program with 'sudo'.
+
+    Examples:
+        please nano /etc/ssh/sshd_config
+        please rm /usr/local/bin/something
+```
+`please` is for those moments where you try to interact with a file/directory, only to find out that you needed to run 'sudo'. Don't you just hate pressing [kbd]Up[/kbd], [kbd]Ctrl[/kbd][kbd]A[/kbd], and typing `sudo`? Don't you just hate seeing "[ File 'somefile' is unwritable ]"? Well, with `please`, you can put all that behind you!
+
+I recommend aliasing the commands you want to use `please` with; for example, I aliased `nano` to be `please nano`.
