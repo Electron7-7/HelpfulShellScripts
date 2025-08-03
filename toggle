@@ -2,9 +2,11 @@
 
 # TODO: Add a single argument/flag for toggling the printouts off (and make printouts a simple function that checks that flag and, if it's true, early returns)
 
-ERR_MSG_ARGUMENT_MISSING="[toggle_program][ERROR] Missing program name!\n"
-MSG_KILLING_PROGRAM="[toggle_program] Program '$1' will be closed.\n"
-MSG_RUNNING_PROGRAM="[toggle_program] Program '$1' will be run.\n"
+NAME="toggle"
+
+ERR_MSG_ARGUMENT_MISSING="[$NAME][ERROR] Missing program name!\n"
+MSG_KILLING_PROGRAM="[$NAME] Program '$1' will be closed.\n"
+MSG_RUNNING_PROGRAM="[$NAME] Program '$1' will be run.\n"
 PROGRAM_ID=$(pgrep $1 2>/dev/null)
 
 [[ -z "$1" ]] && { printf "$ERR_MSG_ARGUMENT_MISSING" && exit 1 }
