@@ -1,6 +1,6 @@
 #!/bin/zsh
 NAME=githubclone
-VERSION=1.1.0
+VERSION=2.0.0
 GIT_CMD="clone"
 GIT_REPO=""
 GIT_OUT=""
