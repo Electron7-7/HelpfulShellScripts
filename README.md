@@ -140,4 +140,4 @@ I recommend aliasing the commands you want to use `please` with; for example, I 
         If no directory is specified, the current working directory is used instead.
 ```
 
-This script exists solely for my amusement. I genuinely forgot why I wrote it; I remember it *had* a purpose other than simply "because I can", but I've forgotten why I needed to recursively count files/folders. I think I was curious to find out how many files were in certain source code folders in a random project and thanks to ADHD, Autism, and free time/will this little guy popped out.
+This script exists solely for my amusement. I genuinely forgot why I wrote it; I remember it *had* a purpose other than simply "because I can", but I've forgotten why I needed to recursively count files/folders. My best guess is I was curious to find out how many files were in certain source code folders in a random project and thanks to ADHD, Autism, and free time/will this little guy popped out.
