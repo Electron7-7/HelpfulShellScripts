@@ -1,6 +1,7 @@
 #!/bin/zsh
-VERSION=1.0.0
-GIT_CMD=""
+NAME=githubclone
+VERSION=1.1.0
+GIT_CMD="clone"
 GIT_REPO=""
 GIT_OUT=""
 GIT_FULL_COMMAND=("")
@@ -9,17 +10,17 @@ NOCONFIRM=false
 showHelp()
 {
 cat <<- EOF
-    Usage: fastgit [-hvy] <command> <username>( |/)<repository> [<destination>]
+    Usage: $NAME [-hvy] <command> <username>( |/)<repository> [<destination>]
 
         -y, --noconfirm  do not ask for any confirmation
         -h, --help       print help document
         -v, --version    print script version
 
     Examples:
-        fastgit -y clone Electron7-7 HelpfulShellScripts
-        fastgit clone Electron7-7/HelpfulShellScripts ./some_shell_scripts
+        $NAME -y Electron7-7 HelpfulShellScripts
+        $NAME Electron7-7/HelpfulShellScripts ./some_shell_scripts
 
-    fastgit v$VERSION
+    $NAME v$VERSION
 EOF
 }
 
@@ -41,9 +42,6 @@ EOF
 
 FillVariables()
 {
-    GIT_CMD="$1"
-    shift
-
     if [[ "$1" =~ '/' ]]; then
         GIT_REPO="$1"
         shift
@@ -135,7 +133,7 @@ do
             exit 0
             ;;
         -v|--version)
-            printf "fastgit $VERSION\n"
+            printf "$NAME $VERSION\n"
             exit 0
             ;;
         -y|--noconfirm)
