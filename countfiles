@@ -1,6 +1,7 @@
 #!/bin/zsh
+NAME="countfiles"
 VERSION="0.0.1"
-VERSION_ECHO="countfiles v$VERSION"
+VERSION_ECHO="$NAME v$VERSION"
 
 RECURSIVE=0
 COUNT_DIRS=0
@@ -15,7 +16,7 @@ RESET="\e[0m"
 _Help()
 {
 cat <<- "EOF"
-    Usage: countfiles [-hvrdf] [DIRECTORY]
+    Usage: $NAME [-hvrdf] [directory]
 
         -h, --help        print help document
         -v, --version     print script version
@@ -24,8 +25,8 @@ cat <<- "EOF"
         -f, --files       count files (default behaviour; this flag is only useful in combination with "-d")
 
     Examples:
-        countfiles -r
-        countfiles -d ~/Documents
+        $NAME -r
+        $NAME -d ~/Documents
 
     Notes:
         If no directory is specified, the current working directory is used instead.
