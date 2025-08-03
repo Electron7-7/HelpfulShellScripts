@@ -2,33 +2,34 @@
 A collection of most of my personal shell scripts that I find to be very useful. The acronym is pronounced "hiss"... like a snake.
 
 # QuickLinks
- - [fastgit](#fastgit) - I hate typing "https:/<n/>/github.com/"
+ - [githubclone](#githubclone) - I hate typing "https:/<n/>/github.com/"
  - [mkcmd](#mkcmd) - I hate typing "touch ~/bin/command && chmod +x ~/bin/command && nano ~/bin/command"
  - [rmcmd](#rmcmd) - I'm just lazy... and a software dev
  - [countfiles](#countfiles) - A quick way to count files and/or directories either recursively or non-recursively
 
 # Descriptions
-## fastgit
+## githubclone
 ```
-    Usage: fastgit [-hvy] <command> <username>( |/)<repository> [<destination>]
+    Usage: githubclone [-hvy] <username>( |/)<repository> [<destination>]
 
         -y, --noconfirm  do not ask for any confirmation
         -h, --help       print help document
         -v, --version    print script version
 
     Examples:
-        fastgit -y clone Electron7-7 HelpfulShellScripts
-        fastgit clone Electron7-7/HelpfulShellScripts ./bin/some_shell_scripts
+        githubclone -y Electron7-7 HelpfulShellScripts
+        githubclone Electron7-7/HelpfulShellScripts ./bin/some_shell_scripts
 ```
 I hate typing "https:/<n/>/github.com/".
 
-Okay, there's more to it than that, but tbh the main reason I made `fastgit` was because I hate having to type out "https:/<n/>/github.com/" every time I clone a repository. Compare the difference between `git` and `fastgit` and you'll see why I made it:
+Yeah, there's not much more to it than that; I made `githubclone` was because I hate having to type out "https:/<n/>/github.com/" every time I clone a repository. If you want to change the URL (e.g: to Gitlab's URL), I've made it easy to do so by keeping the URL in a variable.
 
+I really recommend aliasing this one to something like `ghc` for pure speed and efficiency.
 ```
 $ git clone https://github.com/Electron7-7/HelpfulShellScripts # Belongs in the trash!
 
-$ fastgit clone Electron7-7/HelpfulShellScripts # Bold and brash!
-$ fastgit clone Electron7-7 HelpfulShellScripts # Bolder and brasher!
+$ githubclone Electron7-7/HelpfulShellScripts # Bold and brash!
+$ githubclone Electron7-7 HelpfulShellScripts # Bolder and brasher!
 ```
 
 ## mkcmd
