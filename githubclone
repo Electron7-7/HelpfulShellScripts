@@ -138,12 +138,9 @@ do
             ;;
         -y|--noconfirm)
             NOCONFIRM=true
-            shift 2
-            FillVariables "$@"
-            ChoiceLoop
-            exit 0
             ;;
         --)
+            [[ -z "$2" ]] && { showHelp; exit 1 }
             shift
             FillVariables "$@"
             ChoiceLoop
