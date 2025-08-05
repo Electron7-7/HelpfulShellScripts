@@ -9,7 +9,7 @@ YELLOW="33m"
 RESET="\x1b[0m"
 
 NAME="mkheader"
-VERSION="1.0.1"
+VERSION="1.1.1"
 
 ERROR="$ESC$BOLD$RED[ERROR][$NAME]$ESC$RED"
 WARN="$ESC$BOLD$YELLOW[WARNING][$NAME]$ESC$YELLOW"
@@ -19,16 +19,18 @@ MSG_FILENAMES="Duplicate file names detected!$RESET\n"
 HEADER_FILES=()
 GUARD=""
 FORCE=false
+NOCONFIRM=false
 
 printHelp()
 {
 cat <<- EOF
-    Usage: $NAME [-hv] [-g|--guard <header_guard>] <filename(s)>
+    Usage: $NAME [-hv] [-n|--noconfirm] [-g|--guard <header_guard>] <filename(s)>
 
         -h, --help              print help document
         -v, --version           print script version
             --force             process duplicate filenames and warn the user instead of exiting
         -g, --guard GUARD       specify the name for the header guard (cannot be used with multiple files)
+        -n, --noconfirm         with -g/--guard, skip confirmation
 
     Note:
         When generating multiple files, '$NAME' will error out if it encounters duplicate filenames. This can
@@ -36,7 +38,7 @@ cat <<- EOF
 
     Examples:
         $NAME header_file.hpp another_header_file.h a_weird_header_file another_weird_header_file.headerfile
-        $NAME -g PROJECT_FONTS_H fonts.hpp
+        $NAME -ng PROJECT_FONTS_H fonts.hpp
 
     $NAME v$VERSION
 EOF
@@ -49,11 +51,13 @@ try_SetGuard()
         return 1
     fi
 
-    printf "::Setting the header guard from user input. Keep in mind that any whitespace and non-alphanumeric characters will be replaced with underscores.\n"
     GUARD=$(printf "$GUARD" | tr -c '[:alnum:]' '_')
-    printf "::Use \"$GUARD\" as the header guard? [Y/n] "
-    read -r ANSWER
-    [[ $ANSWER =~ ^[Nn] ]] && printf "\n::A default header guard will be used instead.\n"
+    if ! $NOCONFIRM; then
+        printf "::Use \"$GUARD\" as the header guard? [Y/n] "
+        read -r ANSWER
+        [[ $ANSWER =~ ^[Nn] ]] && printf "\n::A default header guard will be used instead.\n"
+    fi
+    printf "::Header guard set to '$GUARD'\n"
     return 0
 }
 
@@ -71,7 +75,7 @@ check_DuplicateFilenames()
     return 0
 }
 
-OPTIONS=$(getopt -l "help,version,force,guard:" -o "hvg:" -a -- "$@")
+OPTIONS=$(getopt -l "help,version,noconfirm,force,guard:" -o "hvng:" -a -- "$@")
 eval set -- "$OPTIONS"
 
 while true
@@ -84,6 +88,9 @@ do
     -v|--version)
         printf "$NAME v$VERSION\n"
         exit 0
+        ;;
+    -n|--noconfirm)
+        NOCONFIRM=true
         ;;
     --force)
         FORCE=true
