@@ -32,7 +32,7 @@ cat <<- EOF
         -g, --guard GUARD       specify the name for the header guard (cannot be used with multiple files)
         -n, --noconfirm         with -g/--guard, skip confirmation
 
-    Note:
+    Notes:
         When generating multiple files, '$NAME' will error out if it encounters duplicate filenames. This can
         be overridden with the '--force' flag, although it's not recommended.
 
