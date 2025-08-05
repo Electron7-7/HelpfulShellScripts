@@ -1,6 +1,6 @@
 #!/bin/zsh
 NAME="countfiles"
-VERSION="0.0.1"
+VERSION="1.0.2"
 VERSION_ECHO="$NAME v$VERSION"
 
 RECURSIVE=0
@@ -29,7 +29,7 @@ cat <<- "EOF"
         $NAME -d ~/Documents
 
     Notes:
-        If no directory is specified, the current working directory is used instead.
+        If either no directory or an invalid directory are specified, the current working directory is used instead.
 EOF
 
     printf "\n$VERSION_ECHO\n"
@@ -66,7 +66,12 @@ do
     shift
 done
 
-DIR="${$(cd $1 && pwd):-$(pwd)}"
+if [[ -n "$1" ]] && [[ $(ls $1 &>/dev/null; echo $?) == 0 ]] ; then
+    DIR="$(cd $1; pwd)"
+else
+    DIR="$(pwd)"
+fi
+
 FILE_COUNT=0
 DIRECTORY_COUNT=0
 [[ $COUNT_DIRS -eq 1 && $SPECIFY_COUNT_FILES -ne 1 ]] && COUNT_FILES=0
