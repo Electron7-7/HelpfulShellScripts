@@ -3,13 +3,14 @@ set -e
 
 ESC="\x1b["
 BOLD="1;"
+NORM="22m"
 RED="31m"
 GREEN="32m"
 YELLOW="33m"
 RESET="\x1b[0m"
 
 NAME="mkheader"
-VERSION="1.1.1"
+VERSION="1.2"
 
 ERROR="$ESC$BOLD$RED[ERROR][$NAME]$ESC$RED"
 WARN="$ESC$BOLD$YELLOW[WARNING][$NAME]$ESC$YELLOW"
@@ -20,17 +21,19 @@ HEADER_FILES=()
 GUARD=""
 FORCE=false
 NOCONFIRM=false
+CLOBBER=false
 
 printHelp()
 {
 cat <<- EOF
-    Usage: $NAME [-hv] [-n|--noconfirm] [-g|--guard <header_guard>] <filename(s)>
+    Usage: $NAME [-hv] [-n|--noconfirm] [-g|--guard <header_guard>] [-f|--force] <filename(s)>
 
         -h, --help              print help document
         -v, --version           print script version
             --force             process duplicate filenames and warn the user instead of exiting
-        -g, --guard GUARD       specify the name for the header guard (cannot be used with multiple files)
         -n, --noconfirm         with -g/--guard, skip confirmation
+        -g, --guard GUARD       specify the name for the header guard (cannot be used with multiple files)
+        -c, --clobber           overwrite existing files
 
     Notes:
         When generating multiple files, '$NAME' will error out if it encounters duplicate filenames. This can
@@ -75,7 +78,7 @@ check_DuplicateFilenames()
     return 0
 }
 
-OPTIONS=$(getopt -l "help,version,noconfirm,force,guard:" -o "hvng:" -a -- "$@")
+OPTIONS=$(getopt -l "help,version,noconfirm,force,guard:,clobber" -o "hvng:c" -a -- "$@")
 eval set -- "$OPTIONS"
 
 while true
@@ -99,6 +102,9 @@ do
         shift
         GUARD="$1"
         ;;
+    -c|--clobber)
+        CLOBBER=true
+        ;;
     --)
         shift
         break
@@ -121,6 +127,14 @@ if ! check_DuplicateFilenames; then
 fi
 
 for FILE in ${HEADER_FILES[@]}; do
+    CLOBBERING_TIME=false
+    if [[ -f $FILE ]]; then
+        if [[ $CLOBBER == false ]]; then
+            printf "$ESC$BOLD$YELLOW::File $ESC$NORM$FILE$ESC$BOLD$YELLOW already exists; skipping\n$RESET"
+            continue
+        fi
+        CLOBBERING_TIME=true
+    fi
     if [[ -z $GUARD ]]; then
         EXTENSION="${FILE##*.}"
         [[ -z $EXTENSION ]] && EXTENSION="H"
@@ -133,5 +147,5 @@ for FILE in ${HEADER_FILES[@]}; do
     fi
 
     printf "#ifndef $GUARD\n#define $GUARD\n\n#endif // $GUARD\n" > "$FILE"
-    printf "::Created Header File '$FILE'\n"
+    [[ $CLOBBERING_TIME == true ]] && printf "::Overwrote Header File '$FILE'\n" || printf "::Created Header File '$FILE'\n"
 done
